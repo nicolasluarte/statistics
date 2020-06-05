@@ -63,7 +63,7 @@ ggPredict(only_beta, se=TRUE, interactive=FALSE, digits=3, colorn=10)
 beta_alpha <- glm(anx ~ beta:alpha + beta, 
                         data = data,
                         family = binomial())
-ggPredict(only_beta, se=TRUE, interactive=FALSE, digits=3, colorn=10)
+ggPredict(beta_alpha, se=TRUE, interactive=FALSE, digits=3, colorn=3)
 
 ## test candidate models
 ## 7 = only beta
@@ -76,6 +76,5 @@ prob=predict(beta_alpha,type=c("response"))
 data$beta_alpha_pred = prob
 prob2=predict(only_beta,type=c("response"))
 data$only_beta = prob2
-g <- roc(as.factor(anx) ~ prob, data = data)
-g2 <- roc(as.factor(anx) ~ prob2, data = data)
-plot(g)    
+roc(as.factor(anx) ~ prob, data = data, plot = TRUE, ci = TRUE, show.thres = TRUE)
+roc(as.factor(anx) ~ prob2, data = data, plot = TRUE, ci = TRUE, show.thres = TRUE)
