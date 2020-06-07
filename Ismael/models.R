@@ -1,4 +1,4 @@
-pacman::p_load(ggplot2, tidyverse, purrr, broom, caret, furrr, lmtest, sjPlot, ggiraphExtra, ggiraph, doMC, pROC)
+pacman::p_load(ggplot2, tidyverse, purrr, broom, caret, furrr, lmtest, sjPlot, ggiraphExtra, ggiraph, doMC, pROC, corrplot, lme4, boot)
 
 ## load complete data
 data <- read_csv('/home/nicoluarte/repos/statistics/Ismael/data/complete_data.csv')
@@ -78,3 +78,43 @@ prob2=predict(only_beta,type=c("response"))
 data$only_beta = prob2
 roc(as.factor(anx) ~ prob, data = data, plot = TRUE, ci = TRUE, show.thres = TRUE)
 roc(as.factor(anx) ~ prob2, data = data, plot = TRUE, ci = TRUE, show.thres = TRUE)
+
+## testing for data autocorrelation
+## only type and anx seem to be correlated
+m <- cor(data)
+corrplot(m, method = "number")
+
+Box.test(unlist(t1), lag = 1)
+
+t1 <- data  %>% 
+        filter(n == 1)  %>% 
+        select(beta)  %>% 
+        unlist()
+plot(x = 1:length(t1), y = unlist(t1))
+colnames(data)
+plot_acf(unlist(t1))
+
+dwtest(unlist(data[, 2]) ~ unlist(data[, 3]))
+
+
+
+ttt <- glm(anx ~ beta, 
+                        data = data,
+                        family = binomial())
+summary(ttt)
+colnames(data)
+mm.0 <- glm(anx ~ 1 , data = data, family = "binomial")
+mm.00 <- glm(anx ~ 1+ (1|n) , data = data, family = "binomial")
+mm.1 <- glm(anx ~ beta , data = data, family = "binomial")
+mm.2 <- glmer(anx ~ beta + (1|n), data = data, family = "binomial")
+mm.3 <- glmer(anx ~ beta + alpha:beta + (1|n), data = data, family = "binomial")
+
+summary(mm.1)
+summary(mm.3)
+
+AIC(logLik(mm.0))
+AIC(logLik(mm.00))
+AIC(logLik(mm.1))
+AIC(logLik(mm.2))
+AIC(logLik(mm.3))
+
