@@ -1,4 +1,6 @@
-pacman::p_load(tidyverse, ggplot2, furrr, purrr, lme4, broom, corrplot, ROCR, lmtest)
+pacman::p_load(tidyverse, ggplot2, furrr, purrr, lme4, broom, corrplot, ROCR, lmtest, pbnm, knitr, sjPlot, regclass, effects, jtools, sjstats, performance, grid, ggthemes, stargazer)
+devtools::install_github("strengejacke/sjPlot")
+install.packages("pbnm.tar.gz", repos=NULL,type="source")
 
 ## ggplot theme for plots
 cleanup = theme(panel.grid.major = element_blank(),
@@ -21,7 +23,9 @@ data$reported_anxiety <- as.factor(data$reported_anxiety)
 ## assumptions: independence (fail: repeated measures); multicolinearity; dependent variable ratios
 ## multicolinearity
 ## no meaningful correlations
-data_correlations <- cor(data)
+data_correlations <- data  %>%
+        select(-c(control_stress, participant_number, reported_anxiety)) %>% 
+        cor()
 corrplot(data_correlations, method = "number", type = "upper")
 ## dependent variable ratios is almost 1, no problem here
 dv_ratio <- table(data$reported_anxiety)
@@ -80,6 +84,9 @@ stripchart(gamma_power ~ participant_number, vertical = TRUE, data = data,
 beta_g <- ggplot(data, aes(x=reported_anxiety, y=beta_power)) +
         geom_boxplot() +
         facet_wrap(~participant_number)
+beta_g <- ggplot(data, aes(x=reported_anxiety, y=beta_power)) +
+        geom_boxplot() +
+        facet_wrap(~participant_number)
 alpha_g <- ggplot(data, aes(x=reported_anxiety, y=alpha_power)) +
         geom_boxplot() +
         facet_wrap(~participant_number)
@@ -111,6 +118,10 @@ m2 <- glmer(reported_anxiety ~ 1 + (1 | participant_number),
                 control = glmerControl(optimizer = "bobyqa"),
                 nAGQ = 1)
 summary(m2)
+## can also check for intra-class correlation
+## variation of outcome can be accounted by participant (clustering)
+## expected because of repeated measures: 46%~
+icc(m2)
 
 ## model comparison
 ## adding random effect of participant improved the model
@@ -181,9 +192,6 @@ summary(m3.3)
 
 ## model comparison
 ## gamma shows a slight improvement over the null, however beta is better
-AIC(logLik(m2))
-AIC(logLik(m3.1))
-AIC(logLik(m3.2))
 ## complete model offer a super small improvement over using only beta
 AIC(logLik(m3.3))
 
@@ -251,12 +259,11 @@ abline(a=0, b= 1)
 # |_|_|   \__\___||___/\__|
 #                          
 ## finally we test for if the differences found are significant
-lrtest(m2, m3)
-lrtest(m3, m4)
-lrtest(m3, m3.3)
+lmtest::lrtest(m2, m3)
+lmtest::lrtest(m3, m4)
+lmtest::lrtest(m3, m3.3)
 ## the interaction effect seem to be the only improvement over beta only
-lrtest(m3, mi1.1)
-
+lmtest::lrtest(m3, mi1.1)
 
 
 #  ____  _     ___ _____ ____  
@@ -264,4 +271,99 @@ lrtest(m3, mi1.1)
 # | |_) | |  | | | || | \___ \ 
 # |  __/| |__| |_| || |  ___) |
 # |_|   |_____\___/ |_| |____/ 
-                             
+options(browser="/usr/bin/brave")
+
+## to create tables use stargazer
+
+## beta:alpha
+## quantiles for interaction effects
+alpha_quantile <- quantile(data$alpha_power, probs=c(0, 0.50, 1))
+alpha_quantile <- round(alpha_quantile, 2)
+alpha_quantile
+## interaction by quantile
+mi1.1_p <- effect(term="beta_power:alpha_power",
+                  xlevels= list(alpha_power=c(alpha_quantile)),
+                  mod=mi1.1,
+                  se=list(type="pointwise"))
+mi1.1_p <- as.data.frame(mi1.1_p)
+mi1.1_p$alpha_power <- as.factor(mi1.1_p$alpha_power)
+ggplot(mi1.1_p, aes(x=beta_power, y=fit, color=alpha_power,group=alpha_power)) + 
+#    geom_point(position = position_jitter()) + 
+    geom_smooth(size=1.2, method = "lm") +
+#    geom_ribbon(aes(ymin=fit-se, ymax=fit+se, fill=alpha_power),alpha=0.3) +
+    theme_Publication() +
+    scale_fill_Publication() +
+    scale_colour_Publication() +
+    facet_wrap(~ alpha_power)
+
+## only beta
+m3_p <- effect(term="beta_power",
+                  mod=mi1.1,
+                  se=list(type="pointwise"))
+m3_p <- as.data.frame(m3_p)
+ggplot(m3_p, aes(x=beta_power, y=fit)) + 
+#    geom_point(position = position_jitter()) + 
+    geom_smooth(size=1.2, method = "lm") +
+#    geom_ribbon(aes(ymin=fit-se, ymax=fit+se),alpha=0.3) +
+    theme_Publication() +
+    scale_fill_Publication() +
+    scale_colour_Publication()
+
+#  _____ _   _ _   _  ____ _____ ___ ___  _   _ ____  
+# |  ___| | | | \ | |/ ___|_   _|_ _/ _ \| \ | / ___| 
+# | |_  | | | |  \| | |     | |  | | | | |  \| \___ \ 
+# |  _| | |_| | |\  | |___  | |  | | |_| | |\  |___) |
+# |_|    \___/|_| \_|\____| |_| |___\___/|_| \_|____/ 
+#
+
+theme_Publication <- function(base_size=14, base_family="helvetica") {
+      library(grid)
+      library(ggthemes)
+      (theme_foundation(base_size=base_size, base_family=base_family)
+       + theme(plot.title = element_text(face = "bold",
+                                         size = rel(1.2), hjust = 0.5),
+               text = element_text(),
+               panel.background = element_rect(colour = NA),
+               plot.background = element_rect(colour = NA),
+               panel.border = element_rect(colour = NA),
+               axis.title = element_text(face = "bold",size = rel(1)),
+               axis.title.y = element_text(angle=90,vjust =2),
+               axis.title.x = element_text(vjust = -0.2),
+               axis.text = element_text(), 
+               axis.line = element_line(colour="black"),
+               axis.ticks = element_line(),
+               panel.grid.major = element_line(colour="#f0f0f0"),
+               panel.grid.minor = element_blank(),
+               legend.key = element_rect(colour = NA),
+               legend.position = "bottom",
+               legend.direction = "horizontal",
+               legend.key.size= unit(0.2, "cm"),
+               legend.margin = unit(0, "cm"),
+               legend.title = element_text(face="italic"),
+               plot.margin=unit(c(10,5,5,5),"mm"),
+               strip.background=element_rect(colour="#f0f0f0",fill="#f0f0f0"),
+               strip.text = element_text(face="bold")
+          ))
+}
+
+scale_fill_Publication <- function(...){
+      library(scales)
+      discrete_scale("fill","Publication",manual_pal(values = c("#386cb0","#fdb462","#7fc97f","#ef3b2c","#662506","#a6cee3","#fb9a99","#984ea3","#ffff33")), ...)
+}
+
+scale_colour_Publication <- function(...){
+      library(scales)
+      discrete_scale("colour","Publication",manual_pal(values = c("#386cb0","#fdb462","#7fc97f","#ef3b2c","#662506","#a6cee3","#fb9a99","#984ea3","#ffff33")), ...)
+}
+
+
+
+
+
+#  _____ _____ ____ _____ ____  
+# |_   _| ____/ ___|_   _/ ___| 
+#   | | |  _| \___ \ | | \___ \ 
+#   | | | |___ ___) || |  ___) |
+#   |_| |_____|____/ |_| |____/ 
+#                               
+
