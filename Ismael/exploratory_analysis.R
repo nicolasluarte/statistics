@@ -1,5 +1,5 @@
 ## Load libraries
-pacman::p_load(ggplot2, purrr, tidyverse, reshape2, caret, pROC, e1071, lmtest, car, furrr)
+pacman::p_load(ggplot2, purrr, tidyverse, reshape2, caret, pROC, e1071, lmtest, car, furrr, Hmisc)
 
 ## Load data in tibble
 d <- read_csv('/home/nicoluarte/repos/statistics/Ismael/data/trial_data.csv')
@@ -226,3 +226,48 @@ mdl_beta_gamma_alpha <- glm(anx ~ beta + gamma + alpha,
 lrtest(mdl_null, mdl_beta)
 lrtest(mdl_null, mdl_gamma)
 lrtest(mdl_null, mdl_alpha)
+
+## plot test
+head(cd)
+cd$id <- 1:dim(cd)[1]
+cd[c(2,3,4)] <- scale(cd[c(2,3,4)])
+
+
+## numbering rows within groups in a data frame
+dd.1 <- complete_data  %>%
+        group_by(n)  %>%
+        filter(anx == 1)  %>% 
+        mutate(ID = row_number())
+dd.1 <- dd.1  %>% mutate(beta_s = scale(beta), alpha_s = scale(alpha), gamma_s=(scale(gamma)))
+
+## beta 
+dd.1_t <- complete_data  %>%
+        group_by(n)  %>%
+        filter(anx == 1)  %>% 
+        mutate(ID = row_number())  %>% 
+        mutate(cuts = cut_number(ID, 5, labels = FALSE))
+dd.1_t <- dd.1_t  %>%
+        mutate(beta_s = scale(beta),
+               alpha_s = scale(alpha),
+               gamma_s=(scale(gamma)))
+
+ggplot(dd.1_t, aes(x = ID, y = beta_s, )) +
+        geom_point() +
+        geom_smooth(method = "loess" , alpha = 0.5) +
+        facet_wrap(~ cuts, nrow = 1)
+
+## alpha 
+dd.2_t <- complete_data  %>%
+        group_by(n)  %>%
+        filter(anx == 1)  %>% 
+        mutate(ID = row_number())  %>% 
+        mutate(cuts = cut_number(ID, 5, labels = FALSE))
+dd.2_t <- dd.2_t  %>%
+        mutate(beta_s = scale(beta),
+               alpha_s = scale(alpha),
+               gamma_s=(scale(gamma)))
+
+ggplot(dd.2_t, aes(x = ID, y = alpha_s, )) +
+        geom_point() +
+        geom_smooth(method = "loess" , alpha = 0.5) +
+        facet_wrap(~ cuts, nrow = 1)
