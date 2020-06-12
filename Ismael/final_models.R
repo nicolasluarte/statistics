@@ -291,23 +291,29 @@ ggplot(mi1.1_p, aes(x=beta_power, y=fit, color=alpha_power,group=alpha_power)) +
 #    geom_point(position = position_jitter()) + 
     geom_smooth(size=1.2, method = "lm") +
 #    geom_ribbon(aes(ymin=fit-se, ymax=fit+se, fill=alpha_power),alpha=0.3) +
-    theme_Publication() +
-    scale_fill_Publication() +
-    scale_colour_Publication() +
     facet_wrap(~ alpha_power)
 
 ## only beta
 m3_p <- effect(term="beta_power",
                   mod=mi1.1,
                   se=list(type="pointwise"))
+## do Gamma only Plot
+## con los puntitos arriba
+## modelos descriptivos
+## k-fold para gamma y beta (solos)
+mgamma <- effect(term="gamma_power",
+                  mod=m3.2,
+                  se=list(type="pointwise"))
 m3_p <- as.data.frame(m3_p)
-ggplot(m3_p, aes(x=beta_power, y=fit)) + 
+mgamma <- as.data.frame(mgamma)
+ggplot(mgamma, aes(x=gamma_power, y=fit)) + 
 #    geom_point(position = position_jitter()) + 
     geom_smooth(size=1.2, method = "lm") +
+    ylim(c(0, 1))
 #    geom_ribbon(aes(ymin=fit-se, ymax=fit+se),alpha=0.3) +
-    theme_Publication() +
-    scale_fill_Publication() +
-    scale_colour_Publication()
+#    theme_Publication() +
+#    scale_fill_Publication() +
+#    scale_colour_Publication()
 
 #  _____ _   _ _   _  ____ _____ ___ ___  _   _ ____  
 # |  ___| | | | \ | |/ ___|_   _|_ _/ _ \| \ | / ___| 
