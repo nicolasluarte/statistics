@@ -16,6 +16,7 @@ names(data) <- c("control_stress", "beta_power",
                  "reported_anxiety", "participant_number")
 ## dependent as factor
 data$reported_anxiety <- as.factor(data$reported_anxiety)
+data$control_stress <- as.factor(data$control_stress)
 data$participant_number[3062:5911] <- c(data$participant_number[3062:5911]) + 21
 ## scale the variables
 data_scaled <- data %>%
@@ -95,3 +96,43 @@ ggplot(gamma_plot, aes(x, predicted)) +
   ylab("Pr(Condition = Anxiety)")
 
 ## cross validation
+model_accuracy <- c()
+conf_mat <- matrix(c(0,0,0,0), nrow = 2, ncol = 2)
+all_participants <- unique(data_scaled[['participant_number']])
+num_folds <- 10
+folds <- caret::createMultiFolds(all_participants,
+                        k = num_folds,
+                        times = 10)
+for(i in 1:length(folds)){
+        train_ids <- folds[[i]]
+        test_ids <- all_participants[!(all_participants%in%folds[[i]])]
+        train_data <- subset(data_scaled, participant_number %in% train_ids)
+        test_data <- subset(data_scaled, participant_number %in% test_ids)
+        glm_mdl <- glmer(control_stress ~ beta_power_scaled +  
+                            (0 + beta_power_scaled || participant_number),
+                        data = train_data,
+                        family = binomial(link="logit"),
+                        control = glmerControl(optimizer = "bobyqa",
+                                               optCtrl = list(maxfun = 2e5)),
+                        nAGQ = 1)
+        test_participants <- unique(test_data[['participant_number']])
+        for(participant in test_participants) {
+                prediction_subset <- subset(test_data,
+                                            participant_number == participant)
+                y_pred <- predict(glm_mdl,
+                                  newdata = prediction_subset,
+                                  type = c("response"),
+                                  allow.new.levels = TRUE)
+                caret_obj <- caret::confusionMatrix(factor(round(y_pred)),
+                prediction_subset$control_stress)
+                model_accuracy <- c(model_accuracy,caret_obj$overall[['Accuracy']])
+                conf_mat <- conf_mat + caret_obj$table
+        }
+}
+
+mean(model_accuracy)
+conf_mat
+prop.table(conf_mat)
+pROC::roc(response = prediction_subset$control_stress, predictor = y_pred)
+prediction_subset$control_stress
+
