@@ -27,12 +27,12 @@ data_scaled$participant_number <- as.factor(data_scaled$participant_number)
 ## Final models
 
 ## Model with only intercept
-intercept_only <- glm(reported_anxiety ~ 1,
+intercept_only <- glm(control_stress ~ 1,
                 family = binomial(link="logit"),
                 data = data_scaled)
 summary(intercept_only)
 ## Model with random effect
-random_intercept <- glmer(reported_anxiety ~ 1 + (0 + beta_power_scaled || participant_number),
+random_intercept <- glmer(control_stress ~ 1 + (0 + beta_power_scaled || participant_number),
                 data = data_scaled,
                 family = binomial(link="logit"),
                 control = glmerControl(optimizer = "bobyqa"),
@@ -40,7 +40,7 @@ random_intercept <- glmer(reported_anxiety ~ 1 + (0 + beta_power_scaled || parti
 lmtest::lrtest(intercept_only, random_intercept)
 
 ## Model with random intercept and beta fixed effect
-model_beta <- glmer(reported_anxiety ~ beta_power_scaled +  
+model_beta <- glmer(control_stress ~ beta_power_scaled +  
                     (0 + beta_power_scaled || participant_number),
                 data = data_scaled,
                 family = binomial(link="logit"),
@@ -52,7 +52,7 @@ AIC(random_intercept)
 AIC(model_beta)
 
 ## model gamma
-model_gamma <- glmer(reported_anxiety ~ gamma_power_scaled +  
+model_gamma <- glmer(control_stress ~ gamma_power_scaled +  
                     (0 + beta_power_scaled || participant_number),
                 data = data_scaled,
                 family = binomial(link="logit"),
