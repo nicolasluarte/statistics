@@ -1,0 +1,75 @@
+\documentclass{article}
+    % General document formatting
+    \usepackage[margin=0.01in]{geometry}
+    \usepackage[parfill]{parskip}
+    \usepackage[utf8]{inputenc}
+    \usepackage{amsmath}
+    \usepackage{rotating}
+    \usepackage{booktabs}
+
+\begin{document}
+\centering
+\begin{tabular}{c c c c c c c c}
+\toprule
+               & Maximum likelihood estimates (Beta model) &                &            &                   &               & &   \\
+\midrule
+Parameter      & Df                    & Estimate       & Std. Error & Wald \( \chi^2 \)     & Pr $>$ \( \chi^2 \) & Wald CI &  \\
+Intercept      & 1                     & 0.1245         & 0.4293     & 0.084             & 0.77          & -0.7168 - 0.9658 & \\
+Beta Power     & 1                     & 2.9156         & 0.9161     & 10.129            & 0.0014        & 1.1201 - 4.7111  &\\
+\bottomrule
+\end{tabular}
+
+\pagebreak
+
+\begin{tabular}{c c c c c c c c}
+\toprule
+               & Maximum likelihood estimates (Gamma model) &                &            &                   &               & &   \\
+\midrule
+Parameter      & Df                    & Estimate       & Std. Error & Wald \( \chi^2 \)     & Pr $>$ \( \chi^2 \) & Wald CI &  \\
+Intercept      & 1                     & 0         & 0.3095     & 0             & 1          & -0.6066 - 0.6066 & \\
+Gamma Power     & 1                     & -0.1566         & 0.3158     & 0.2459            & 0.62        & 0.7756 - 0.4223  &\\
+\bottomrule
+\end{tabular}
+
+\pagebreak
+
+\begin{tabular}{c c c c c c c c}
+\toprule
+               & Likelihood ratio test &                &            &                   &               &   &\\
+\midrule
+               & Df                    & Log Likelihood & \( \chi^2 \) & Pr $>$ \( \chi^2 \)                  & &              &   \\
+Intercept only & 1                     & -29.112        &            &                   &               &   &\\
+Beta Model     & 2                     & -17.317        & 23.591     & $<$ 0.001 &               &   &\\
+Gamma Model    & 2                     & -28.998        & 0.2487     & 0.618             &               &  & \\
+\bottomrule
+\end{tabular}
+
+\pagebreak
+
+\begin{tabular}{c c c}
+\toprule
+	& Repeated K-fold cross-validation results (Beta model) & \\
+\midrule
+Accuracy & 0.8525 (SD = 0.1735) & \\
+Kappa & 0.7044 (SD = 0.3467) & \\
+AUROC & 0.9375 (SD = 0.1509) & \\
+Sensibility & 0.895 (SD = 0.2127) & \\
+Specificity &  0.8266 (SD = 0.2647) & \\
+\bottomrule
+\end{tabular}
+
+\pagebreak
+
+\begin{tabular}{c c c}
+\toprule
+	& Repeated K-fold cross-validation results (Gamma model) & \\
+\midrule
+Accuracy & 0.5961 (SD = 0.2321) & \\
+Kappa & 0.1902 (SD = 0.4679) & \\
+AUROC & 0.69 (SD = 0.2947) & \\
+Sensibility & 0.5316 (SD = 0.3535) & \\
+Specificity &  0.675 (SD = 0.3190) & \\
+\bottomrule
+\end{tabular}
+
+\end{document}
