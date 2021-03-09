@@ -1,4 +1,4 @@
-paccman::p_load(tidyverse,
+pacman::p_load(tidyverse,
                ggplot2,
                lme4,
                caret,
@@ -7,7 +7,8 @@ paccman::p_load(tidyverse,
                rms,
                ggeffects,
                lmtest,
-               brglm2)
+               brglm2,
+               gridExtra)
 
 ## ggplot theme for plots
 theme_article <- function() {
@@ -156,7 +157,8 @@ roc_curve
 ## Plots
 ggroc(roc_curve, legacy.axes = TRUE) + theme_article() + ggtitle("Beta power model ROC\n") +
   geom_abline(intercept = 0, slope = 1, color = "darkgrey", linetype = "dashed")
-plot_model <- ggpredict(test_beta, terms = c(as.vector("beta_mean"))) %>%
+
+plot_model_beta <- ggpredict(test_beta, terms = c(as.vector("beta_mean"))) %>%
   plot() +
   xlab("Beta power Z-score") +
   ylab("Pr(Stress condition)") +
@@ -166,11 +168,11 @@ plot_model <- ggpredict(test_beta, terms = c(as.vector("beta_mean"))) %>%
   geom_point(data = test_data, aes(x = beta_mean,
                                    y = condition,
                                    colour = control_stress), alpha = 0.3) +
-  scale_colour_manual(values=c("blue", "red"), labels = c("Control", "Stress")) +
+  scale_colour_manual(values=c("gray", "green"), labels = c("Control", "Stress")) +
   ggtitle("Beta model\n") +
   theme_article()
   
-plot(plot_model)
+plot(plot_model_beta)
 
 
 plot_model_gamma <- ggpredict(test_gamma, terms = c(as.vector("gamma_mean"))) %>%
@@ -180,12 +182,14 @@ plot_model_gamma <- ggpredict(test_gamma, terms = c(as.vector("gamma_mean"))) %>
   labs(color = "") +
   ylim(c(0, 1)) +
   xlim(c(-1, 1)) +
-  geom_point(data = test_data, aes(x = beta_mean,
+  geom_point(data = test_data, aes(x = gamma_mean,
                                    y = condition,
                                    colour = control_stress), alpha = 0.3) +
-  scale_colour_manual(values=c("blue", "red"), labels = c("Control", "Stress")) +
+  scale_colour_manual(values=c("gray", "green"), labels = c("Control", "Stress")) +
   ggtitle("Gamma model\n") +
   theme_article()
   
 plot(plot_model_gamma)
 
+# facet wrap
+grid.arrange(plot_model_beta, plot_model_gamma)
